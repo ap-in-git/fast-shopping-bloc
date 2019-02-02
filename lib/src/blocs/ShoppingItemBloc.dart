@@ -1,6 +1,6 @@
 import 'package:rxdart/rxdart.dart';
 import '../models/ShoppingItem.dart';
-import 'package:faker/faker.dart';
+import '../db/db_provider.dart';
 
 class ShoppingItemBloc {
   final _shoppingItems = BehaviorSubject<List<ShoppingItem>>(seedValue: []);
@@ -10,30 +10,26 @@ class ShoppingItemBloc {
   int get totalShoppingItems => _shoppingItems.value.length;
 
   ShoppingItemBloc() {
-    _loadDummyData();
+    _loadInitialData();
   }
 
-  void _loadDummyData() {
-    var faker = new Faker();
-    List<ShoppingItem> tempShoppingItems = [];
-    for (int i = 0; i < 20; i++) {
-      tempShoppingItems.add(ShoppingItem(
-          id: i.toString(),
-          name: faker.food.dish(),
-          completed: i % 2 == 0 ? true : false));
-    }
-    _shoppingItems.add(tempShoppingItems);
+  void _loadInitialData() async {
+    _shoppingItems.add(await DBProvider.db.getShoppingItems());
   }
 
-  void addItemToShoppingList(ShoppingItem shoppingItem) {
+  void addItemToShoppingList(ShoppingItem shoppingItem) async {
     List<ShoppingItem> shoppingItems = _shoppingItems.value;
-
-    shoppingItems.insert(0, shoppingItem);
+    shoppingItem.id = await DBProvider.db.insertShoppingItem(shoppingItem);
+    shoppingItems.add(shoppingItem);
     _shoppingItems.add(shoppingItems);
   }
 
-  void alterShoppingStatus(ShoppingItem shoppingItem, bool status) {
-    shoppingItem.completed = status;
+  void alterShoppingStatus(ShoppingItem shoppingItem) {
+    shoppingItem.completed = !shoppingItem.completed;
+    //Update the db
+    DBProvider.db.alterShoppingItem(shoppingItem);
+
+    //Update the list
     List<ShoppingItem> tempShoppingItems =
         _shoppingItems.value.map((singleItem) {
       return shoppingItem.id == singleItem.id ? shoppingItem : singleItem;
@@ -41,9 +37,10 @@ class ShoppingItemBloc {
     _shoppingItems.add(tempShoppingItems);
   }
 
-  void deleteShoppingItem(String id){
+  void deleteShoppingItem(int id) {
     List<ShoppingItem> tempShoppingItems = _shoppingItems.value;
-    tempShoppingItems.removeWhere((item)=>item.id == id);
+    DBProvider.db.deleteShoppingItem(id);
+    tempShoppingItems.removeWhere((item) => item.id == id);
     _shoppingItems.add(tempShoppingItems);
   }
 

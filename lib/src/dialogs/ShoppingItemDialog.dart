@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/ShoppingItem.dart';
 import '../blocs/ShoppingItemBloc.dart';
-import 'dart:math';
 
 class ShoppingItemDialog extends StatefulWidget {
+  final BuildContext originalContext;
+  ShoppingItemDialog(this.originalContext);
+
   @override
   State<StatefulWidget> createState() => _ShoppingItemDialogState();
 }
@@ -46,14 +48,14 @@ class _ShoppingItemDialogState extends State<ShoppingItemDialog> {
         onPressed: () async {
           if (_formKey.currentState.validate()) {
             _formKey.currentState.save();
-            var randomNumber = new Random();
 
             bloc.addItemToShoppingList(ShoppingItem(
-                id: (bloc.totalShoppingItems +1).toString(),
                 name: _itemName,
                 completed: false));
+            Scaffold.of(widget.originalContext).showSnackBar(SnackBar(content: Text('Item added succesfully')));
             Navigator.pop(context);
           }
+
         },
         child: Text('Add item'),
       ),

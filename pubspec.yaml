@@ -18,6 +18,8 @@ dependencies:
 
   rxdart: any
 
+  sqflite: any
+  path_provider: any
   faker: any
 
   # The following adds the Cupertino Icons font to your application.

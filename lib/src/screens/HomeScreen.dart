@@ -11,26 +11,30 @@ class HomeScreen extends StatelessWidget {
         title: Text('Shopping list'),
       ),
       body: _showShoppingList(context),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showPurchaseDialog(context),
-        child: Icon(Icons.add_shopping_cart),
-      ),
+      floatingActionButton: Builder(builder: (BuildContext context) {
+        return FloatingActionButton(
+          onPressed: () => _showPurchaseDialog(context),
+          child: Icon(Icons.add_shopping_cart),
+        );
+      }),
     );
   }
 
   void _showPurchaseDialog(context) async {
     showDialog(
         context: context,
-        builder: (BuildContext context) => ShoppingItemDialog());
+        builder: (BuildContext dialogContext) => ShoppingItemDialog(context));
   }
 
   Widget _showShoppingList(context) {
     return StreamBuilder(
       stream: bloc.allShoppingItems,
       builder: (context, AsyncSnapshot<List<ShoppingItem>> snapshot) {
-        if (!snapshot.hasData || snapshot.data.length == 0)
-          return Text('No items in the list');
-
+        if (!snapshot.hasData)
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        if (snapshot.data.length == 0) return Text('No items in the list');
         return ListView(
           children: snapshot.data
               .map((shoppingItem) => SingleShoppingItem(shoppingItem))
@@ -49,13 +53,22 @@ class SingleShoppingItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Checkbox(value: shoppingItem.completed, onChanged: (bool itemChecked){
-        bloc.alterShoppingStatus(shoppingItem, itemChecked);
-      }),
+      onTap: () {
+        bloc.alterShoppingStatus(shoppingItem);
+      },
+      leading: Checkbox(
+          value: shoppingItem.completed,
+          onChanged: (bool) {
+            bloc.alterShoppingStatus(shoppingItem);
+          }),
       title: Text(shoppingItem.name),
-      trailing: IconButton(icon:Icon(Icons.delete), onPressed: (){
-        bloc.deleteShoppingItem(shoppingItem.id);
-      }),
+      trailing: IconButton(
+          icon: Icon(Icons.delete),
+          onPressed: () {
+            bloc.deleteShoppingItem(shoppingItem.id);
+            Scaffold.of(context)
+                .showSnackBar(SnackBar(content: Text('Deleted ')));
+          }),
     );
   }
 }
