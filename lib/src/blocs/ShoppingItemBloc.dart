@@ -7,7 +7,12 @@ class ShoppingItemBloc {
 
   Observable<List<ShoppingItem>> get allShoppingItems => _shoppingItems.stream;
 
+
+  Observable<List<ShoppingItem>> get completedShoppingItems => _shoppingItems.map((items)=>items.where((item)=>item.completed==true).toList());
+  Observable<List<ShoppingItem>> get unCompletedShoppingItems => _shoppingItems.map((items)=>items.where((item)=>item.completed==false).toList());
+
   int get totalShoppingItems => _shoppingItems.value.length;
+
 
   ShoppingItemBloc() {
     _loadInitialData();
@@ -24,6 +29,7 @@ class ShoppingItemBloc {
     _shoppingItems.add(shoppingItems);
   }
 
+
   void alterShoppingStatus(ShoppingItem shoppingItem) {
     shoppingItem.completed = !shoppingItem.completed;
     //Update the db
@@ -31,7 +37,7 @@ class ShoppingItemBloc {
 
     //Update the list
     List<ShoppingItem> tempShoppingItems =
-        _shoppingItems.value.map((singleItem) {
+    _shoppingItems.value.map((singleItem) {
       return shoppingItem.id == singleItem.id ? shoppingItem : singleItem;
     }).toList();
     _shoppingItems.add(tempShoppingItems);

@@ -6,17 +6,30 @@ import '../models/ShoppingItem.dart';
 class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Shopping list'),
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: Text('Shopping list'),
+          bottom: TabBar(tabs: <Widget>[
+            Text('All items'),
+            Text('Completed'),
+            Text('Not completed')
+          ]),
+        ),
+        body: TabBarView(children: [
+          _showShoppingList(context),
+          _buildCompletedItems(),
+           _buildUncompletedItems()
+        ]),
+        floatingActionButton: Builder(builder: (BuildContext context) {
+          return FloatingActionButton(
+            onPressed: () => _showPurchaseDialog(context),
+            child: Icon(Icons.add_shopping_cart),
+          );
+        }),
       ),
-      body: _showShoppingList(context),
-      floatingActionButton: Builder(builder: (BuildContext context) {
-        return FloatingActionButton(
-          onPressed: () => _showPurchaseDialog(context),
-          child: Icon(Icons.add_shopping_cart),
-        );
-      }),
     );
   }
 
@@ -34,7 +47,7 @@ class HomeScreen extends StatelessWidget {
           return Center(
             child: CircularProgressIndicator(),
           );
-        if (snapshot.data.length == 0) return Text('No items in the list');
+        if (snapshot.data.length == 0) return _buildEmptyCart();
         return ListView(
           children: snapshot.data
               .map((shoppingItem) => SingleShoppingItem(shoppingItem))
@@ -43,7 +56,52 @@ class HomeScreen extends StatelessWidget {
       },
     );
   }
+
+  Widget _buildCompletedItems() {
+    return StreamBuilder(
+      stream: bloc.completedShoppingItems,
+      builder: (context, AsyncSnapshot<List<ShoppingItem>> snapshot) {
+        if (!snapshot.hasData)
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        if (snapshot.data.length == 0) return _buildEmptyCart();
+        return ListView(
+          children: snapshot.data
+              .map((shoppingItem) => SingleShoppingItem(shoppingItem))
+              .toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildUncompletedItems() {
+    return StreamBuilder(
+      stream: bloc.unCompletedShoppingItems,
+      builder: (context, AsyncSnapshot<List<ShoppingItem>> snapshot) {
+        if (!snapshot.hasData)
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        if (snapshot.data.length == 0) return _buildEmptyCart();
+        return ListView(
+          children: snapshot.data
+              .map((shoppingItem) => SingleShoppingItem(shoppingItem))
+              .toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyCart(){
+
+//    return Text('No item found');
+    return Image.asset('assets/empty_cart.png');
+  }
 }
+
+
+
 
 class SingleShoppingItem extends StatelessWidget {
   SingleShoppingItem(this.shoppingItem);
